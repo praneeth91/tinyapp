@@ -55,8 +55,6 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-
-
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
@@ -64,4 +62,12 @@ app.get("/hello", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls")
+});
+app.post("/urls/:shortURL/edit", (req, res) => {
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  res.render("urls_show", templateVars);
+});
+app.post("/urls/:shortURL/update", (req,res) => {
+  urlDatabase[req.params.shortURL] = req.body.newLongurl;
+  res.redirect("/urls");
 });
