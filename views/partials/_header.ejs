@@ -11,14 +11,13 @@
       </div>
     </div>
     
-    <% if(!username) { %>
+    <% if(!user_id) { %>
       <ul class="nav justify-content-right">
-    <form method="POST" action="/urls/login"> 
-      <input type = "text"  placeholder="Username" name ="username" >
-      <button class="btn btn-outline-dark" type="submit">Login</button></form>
+      <a class="nav-item nav-link" href="/login">Login</a>
+       <a class="nav-item nav-link" href="/register">register</a> 
       <% } else { %>
-        <form method="POST" action="/urls/<%= username %>/logout"> 
-          Logged In As: <%= username %>
+        <form method="POST" action="/urls/<%= user_id %>/logout"> 
+          Logged In As: <%= user_id.email %>
           <button class="btn btn-outline-dark" type="submit">Logout</button></form>
           <% } %>
         </ul>
