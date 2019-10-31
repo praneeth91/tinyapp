@@ -2,6 +2,7 @@ const express = require("express");
 const cookieParser = require('cookie-parser');
 const app = express();
 app.use(cookieParser());
+const bcrypt = require('bcrypt');
 const PORT = 8080; // default port 8080
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
@@ -57,12 +58,11 @@ const users = {
   }
 }
 app.get("/urls", (req, res) => {
-  if(req.cookies["user_id"] === undefined){
-    res.redirect("/login");
-  }
-   let id = req.cookies["user_id"];
-   let userUrlDatabase = urlsForUser(id);
-   console.log(userUrlDatabase);
+  // if(req.cookies["user_id"] === undefined){
+  //   res.redirect("/login");
+  // }
+  let id = req.cookies["user_id"];
+  let userUrlDatabase = urlsForUser(id);
   let templateVars = { urls: userUrlDatabase, user_id: users[req.cookies["user_id"]]};
   res.render("urls_index", templateVars);
   
@@ -105,8 +105,7 @@ app.post("/urls", (req, res) => {
 
 });
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL]
-  //res.send("hello")
+  const longURL = urlDatabase[req.params.shortURL].longURL;  
   res.redirect(longURL);
 });
 
@@ -138,10 +137,10 @@ app.post("/urls/:shortURL/update", (req,res) => {
 urlDatabase[req.params.shortURL] = req.body.newLongurl;
 res.redirect("/urls");
 });
-app.post("/urls/login",(req,res) => {
+/*app.post("/urls/login",(req,res) => {
   res.cookie("render",req.body.template);
   res.redirect("/urls");
-});
+});*/
 app.post("/urls/:user_id/logout", (req,res) => {
   res.clearCookie("user_id");
   res.redirect("/urls");
@@ -150,14 +149,13 @@ app.post("/register", (req, res) => {
   let randomid = generateRandomString();
   let useremail = req.body.email;
   let userpassword = req.body.password;
+  let hashedPassword = bcrypt.hashSync(userpassword, 10);
   if(useremail === "" || userpassword === "") {
     res.status(400).send(`email and/or password can't be empty`);    
-  }
-  if(emailLookup(useremail).length !== 0) {
+  } else if(emailLookup(useremail).length !== 0) {
     res.status(400).send(`user with given email already exists`);    
-
   }
-  users[randomid] = {id:randomid, email:useremail, password:userpassword};
+  users[randomid] = {id:randomid, email:useremail, password:hashedPassword};
   res.cookie("user_id",randomid);
   res.redirect("/urls");
 
@@ -168,8 +166,7 @@ app.post("/login", (req,res) => {
   let arr1 = emailLookup(useremail);
   if(arr1.length === 0) {
     res.status(403).send("user with the given email doesn't exist");
-  }
-  if(userpassword !== arr1[2]) {
+  } else if(!bcrypt.compareSync(userpassword,arr1[2])) {
     res.status(403).send("password doesn't match");
   }
   res.cookie("user_id",arr1[0]);
